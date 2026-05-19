@@ -31,7 +31,7 @@ const loginUser = async (payload: any) => {
     const jwtPayload = {
         id: user.id,
         email: user.email,
-        role: ROLES.ADMIN,
+        role: user.role,
     };
 
     const accessToken = jwt.sign(
@@ -104,7 +104,7 @@ const refreshToken = async (token: string) => {
     const jwtPayload = {
         id: user.id,
         email: user.email,
-        role: "USER",
+        role: user.role,
     };
 
     const accessToken = jwt.sign(
