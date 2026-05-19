@@ -18,6 +18,12 @@ const getAllUsersFromDB = async (query: any) => {
     if (search) {
         whereConditions.OR = [
             {
+                id: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
                 email: {
                     contains: search,
                     mode: "insensitive",
@@ -94,9 +100,78 @@ const getSingleUserFromDB = async (id: string) => {
         select: {
             id: true,
             email: true,
+            role: true,
             createdAt: true,
             updatedAt: true,
+            candidateProfile: true,
+            recruiterProfile: true,
         },
+    });
+    return result;
+};
+
+const updateUserInDB = async (id: string, payload: any) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: { id },
+    });
+
+    const result = await prisma.$transaction(async (tx) => {
+        // Update user email if provided
+        await tx.user.update({
+            where: { id },
+            data: {
+                email: payload.email,
+            },
+        });
+
+        // Update profile based on role
+        if (user.role === "recruiter") {
+            await tx.recruiterProfile.update({
+                where: { userId: id },
+                data: {
+                    name: payload.name,
+                    website: payload.website,
+                    location: payload.location,
+                    description: payload.description,
+                    logo: payload.logo,
+                },
+            });
+        } else if (user.role === "candidate") {
+            await tx.candidateProfile.update({
+                where: { userId: id },
+                data: {
+                    fullName: payload.name || payload.fullName,
+                    phoneNumber: payload.phoneNumber,
+                    skills: payload.skills,
+                    experience: payload.experience,
+                    education: payload.education,
+                    resume: payload.resume,
+                    githubLink: payload.githubLink,
+                    linkedInLink: payload.linkedInLink,
+                },
+            });
+        }
+
+        return tx.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+                candidateProfile: true,
+                recruiterProfile: true,
+            },
+        });
+    });
+
+    return result;
+};
+
+const deleteUserFromDB = async (id: string) => {
+    const result = await prisma.user.delete({
+        where: { id },
     });
     return result;
 };
@@ -153,4 +228,6 @@ export const UserService = {
     getAllUsersFromDB,
     getSingleUserFromDB,
     createAnUserToDB,
+    updateUserInDB,
+    deleteUserFromDB,
 };

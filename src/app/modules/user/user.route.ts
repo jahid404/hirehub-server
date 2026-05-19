@@ -9,5 +9,7 @@ const router = express.Router();
 router.get("/", auth(ROLES.ADMIN), UserController.getAllUsers);
 router.get("/:id", auth(ROLES.ADMIN), UserController.getSingleUser);
 router.post("/create", auth(ROLES.ADMIN), UserController.createAnUser);
+router.patch("/:id", auth(ROLES.ADMIN), UserController.updateUser);
+router.delete("/:id", auth(ROLES.ADMIN), UserController.deleteUser);
 
 export const UserRoutes = router;
