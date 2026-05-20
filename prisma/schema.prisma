@@ -50,6 +50,30 @@ model RecruiterProfile {
   logo        String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  jobs        Job[]
 
   @@map("recruiter_profiles")
 }
+
+model Job {
+  id                  String           @id @default(uuid())
+  title               String
+  description         String
+  salaryRange         String           @map("salary_range")
+  location            String
+  employmentType      String           @map("employment_type")
+  experienceLevel     String           @map("experience_level")
+  requiredSkills      String[]         @map("required_skills")
+  vacancyCount        Int              @map("vacancy_count")
+  applicationDeadline DateTime         @map("application_deadline")
+  remoteInfo          String           @map("remote_info")
+  
+  recruiterId         String           @map("recruiter_id")
+  recruiter           RecruiterProfile @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  @@map("jobs")
+}
+
