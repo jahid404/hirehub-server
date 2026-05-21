@@ -308,6 +308,67 @@ Secures any route by checking for a Bearer token in the `Authorization` header.
 
 ---
 
+## 🗄️ Prisma Migrations & Database Seeding Guidelines
+
+In development, database schemas evolve. Understanding how to apply migrations and how to recover or populate your database with seed data is crucial.
+
+### ⚠️ Warning: Why Did My Data Disappear?
+When running `npx prisma migrate dev`, Prisma compares your `schema.prisma` file with your actual database schema and your migration history.
+- If there is a **drift** (e.g., the database was modified manually, or migration history has conflicts), Prisma will prompt you to **reset the database**.
+- **Accepting the reset clears the entire database** (deleting all existing tables and data) before applying migrations from scratch.
+
+---
+
+### 🚀 Recovering Your Data: Database Seeding
+If your database has been reset, you can instantly restore all default seed data (Admin, Recruiters, Candidates, and Jobs) by running the built-in seeding tool:
+
+```bash
+# Seed all default profiles and data
+npx prisma db seed
+```
+
+#### Seed Target Datasets Individually
+If you want to seed only specific parts of the database (due to the custom `--name` parameter in `seed.ts`), you can execute:
+```bash
+# Seed Admin account only
+npx ts-node prisma/seed.ts --name=admin
+
+# Seed Recruiters only
+npx ts-node prisma/seed.ts --name=recruiter
+
+# Seed Candidates only
+npx ts-node prisma/seed.ts --name=candidate
+
+# Seed Job listings only
+npx ts-node prisma/seed.ts --name=jobs
+```
+
+---
+
+### 🛡️ How to Migrate Safely (Avoid Resets)
+
+1. **For Development (Standard)**:
+   ```bash
+   npx prisma migrate dev --name <migration_name>
+   ```
+   *Only reset if Prisma explicitly warns you about schema drift and you are okay with seeding afterwards.*
+
+2. **For Production / Staging (Never Reset)**:
+   Never use `migrate dev` on production databases. Instead, use:
+   ```bash
+   npx prisma migrate deploy
+   ```
+   *This applies pending migrations directly to the database without ever prompting for or performing a reset.*
+
+3. **To Manually Reset and Seed**:
+   If you want to completely clean and rebuild the database with seeds:
+   ```bash
+   npx prisma migrate reset
+   ```
+   *(This will wipe the database, run all migration files, and automatically run the `prisma db seed` script).*
+
+---
+
 ## ⚡ Essential Commands Cheat Sheet
 
 | Command                                          | Purpose                                                     |
@@ -315,7 +376,10 @@ Secures any route by checking for a Bearer token in the `Authorization` header.
 | `npm run dev`                                    | Runs the server locally with auto-reload.                   |
 | `npx prisma generate`                            | Regenerates the Prisma Client types.                        |
 | `npx prisma migrate dev --name <migration_name>` | Generates and applies a database migration.                 |
+| `npx prisma migrate deploy`                      | Safely deploys pending migrations without resets.           |
+| `npx prisma migrate reset`                       | Wipes the database, re-runs migrations, and runs seeding.   |
 | `npx prisma studio`                              | Starts a browser GUI to view and edit your database tables. |
 | `npx tsc --noEmit`                               | Checks the entire codebase for TypeScript compiler errors.  |
 | `npx prisma db seed`                             | Seeds all default user accounts and profiles.               |
 | `npx prisma db seed -- --name=<seeder_name>`     | Seeds only one specific role data set.                      |
+
