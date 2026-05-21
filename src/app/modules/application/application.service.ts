@@ -97,6 +97,7 @@ const applyJobInDB = async (
 };
 
 const getApplicationsFromDB = async (userId: string, role: string) => {
+    // Role is admin
     if (role === "admin") {
         return prisma.application.findMany({
             include: {
@@ -107,6 +108,7 @@ const getApplicationsFromDB = async (userId: string, role: string) => {
         });
     }
 
+    // Role is recruiter
     if (role === "recruiter") {
         const recruiterProfile = await prisma.recruiterProfile.findUnique({
             where: { userId },
@@ -133,17 +135,28 @@ const getApplicationsFromDB = async (userId: string, role: string) => {
         });
     }
 
+    // Role is candidate
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+
     const candidateProfile = await prisma.candidateProfile.findUnique({
         where: { userId },
     });
 
-    if (!candidateProfile) {
-        throw new AppError(httpStatus.FORBIDDEN, "Candidate profile not found");
-    }
-
+    // Return applications associated with candidate's profile ID OR applications
     return prisma.application.findMany({
         where: {
-            candidateId: candidateProfile.id,
+            OR: [
+                candidateProfile
+                    ? { candidateId: candidateProfile.id }
+                    : undefined,
+                { email: user.email },
+            ].filter(Boolean) as any,
         },
         include: {
             job: true,
@@ -159,7 +172,6 @@ const updateApplicationStatusInDB = async (
     userId: string,
     role: string,
 ) => {
-    // 1. Verify Application exists
     const application = await prisma.application.findUnique({
         where: { id: applicationId },
         include: { job: true },
@@ -169,7 +181,6 @@ const updateApplicationStatusInDB = async (
         throw new AppError(httpStatus.NOT_FOUND, "Application not found");
     }
 
-    // 2. Authorization check
     if (role !== "admin") {
         const recruiterProfile = await prisma.recruiterProfile.findUnique({
             where: { userId },
@@ -186,7 +197,6 @@ const updateApplicationStatusInDB = async (
         }
     }
 
-    // 3. Update status
     const result = await prisma.application.update({
         where: { id: applicationId },
         data: { status },
