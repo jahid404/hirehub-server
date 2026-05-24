@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import config from '../config';
 
-const connectionString = config.database_url;
+const connectionString = config.database_url || "postgresql://mock:mock@localhost:5432/mock";
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 
