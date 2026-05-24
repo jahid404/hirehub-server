@@ -5,6 +5,7 @@ import { ProfileRoutes } from '../modules/profile/profile.route';
 import { FileRoutes } from '../modules/file/file.route';
 import { JobRoutes } from '../modules/job/job.route';
 import { ApplicationRoutes } from '../modules/application/application.route';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
   {
     path: '/applications',
     route: ApplicationRoutes,
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
   },
 ];
 
